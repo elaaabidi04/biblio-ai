@@ -44,14 +44,17 @@ TMDB_BASE      = "https://api.themoviedb.org/3"
 TMDB_IMG       = "https://image.tmdb.org/t/p/w500"
 OPEN_LIBRARY   = "https://openlibrary.org"
 
-# ── MYSQL CONFIG (XAMPP defaults) ────────────────────────────────────────────
+# ── MYSQL CONFIG ─────────────────────────────────────────────────────────────
 DB_CONFIG = {
     "host":     os.environ.get("MYSQLHOST",     "localhost"),
     "port":     int(os.environ.get("MYSQLPORT", "3306")),
     "user":     os.environ.get("MYSQLUSER",     "root"),
     "password": os.environ.get("MYSQLPASSWORD", ""),
-    "database": os.environ.get("MYSQLDATABASE", "recommender_db")
+    "database": os.environ.get("MYSQLDATABASE", "recommender_db"),
 }
+# Aiven requires SSL — only enabled when MYSQL_SSL=true is set
+if os.environ.get("MYSQL_SSL", "").lower() == "true":
+    DB_CONFIG["ssl_ca"] = os.environ.get("MYSQL_SSL_CA", "ca.pem")
 # ══════════════════════════════════════════════════════════════════════════════
 #  DATABASE LAYER
 # ══════════════════════════════════════════════════════════════════════════════
@@ -511,7 +514,8 @@ def clear():
 
 
 # ── ENTRY POINT ──────────────────────────────────────────────────────────────
+init_db()   # runs for both gunicorn and direct python
+
 if __name__ == "__main__":
-    init_db()
     port = int(os.environ.get("PORT", 5002))
     app.run(host="0.0.0.0", port=port)
