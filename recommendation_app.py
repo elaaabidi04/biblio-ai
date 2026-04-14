@@ -60,8 +60,11 @@ if os.environ.get("MYSQL_SSL", "").lower() == "true":
 # ══════════════════════════════════════════════════════════════════════════════
 
 def get_db():
-    """Returns a MySQL connection using XAMPP defaults."""
-    return mysql.connector.connect(**DB_CONFIG)
+    """Returns a MySQL connection."""
+    try:
+        return mysql.connector.connect(**DB_CONFIG)
+    except Exception as e:
+        raise ConnectionError(f"Database unavailable: {e}")
 
 
 def init_db():
@@ -403,7 +406,10 @@ def api_test_openlibrary():
 def history():
     """Returns the conversation history for a session, ready to render."""
     session_id = request.args.get("session_id", "default")
-    rows = get_history(session_id)
+    try:
+        rows = get_history(session_id)
+    except Exception:
+        return jsonify({"messages": []})
     messages = []
     for row in rows:
         if row["role"] == "user":
@@ -443,10 +449,16 @@ def chat():
         return jsonify({"error": "Empty message"}), 400
 
     # 1. Save user message
-    save_message(session_id, "user", user_msg)
+    try:
+        save_message(session_id, "user", user_msg)
+    except Exception:
+        pass  # continue even if DB is down
 
     # 2. Load full history
-    history = get_history(session_id)
+    try:
+        history = get_history(session_id)
+    except Exception:
+        history = []
 
     # 3. Call AI
     try:
@@ -455,6 +467,8 @@ def chat():
         return jsonify({"error": "AI returned unexpected format. Try again."}), 500
     except requests.exceptions.HTTPError as e:
         return jsonify({"error": f"AI API error: {e}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"AI error: {e}"}), 500
 
     message         = ai_response.get("message", "")
     recommendations = ai_response.get("recommendations", [])
@@ -514,7 +528,11 @@ def clear():
 
 
 # ── ENTRY POINT ──────────────────────────────────────────────────────────────
-init_db()   # runs for both gunicorn and direct python
+try:
+    init_db()
+    print("MySQL tables ready")
+except Exception as e:
+    print(f"WARNING: Could not init database: {e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5002))
