@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Status — Biblio AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --cream:#f5f0e1;
+  --cream-dark:#e8e0c8;
+  --warm-white:#fdf8ef;
+  --brown:#6b4f35;
+  --brown-light:#9b7a5a;
+  --green:#5a7a5c;
+  --green-light:#8aaa7a;
+  --green-pale:#d4e6c3;
+  --text-dark:#3a2e20;
+  --text-mid:#6b5a45;
+  --amber:#c9874a;
+  --amber-light:#e8b97a;
+  --border:rgba(107,79,53,.18);
+  --border2:rgba(107,79,53,.28);
+  --shadow:rgba(58,46,32,.1);
+  --ok:#5a7a5c;
+  --fail:#a0503a;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--cream);
+  color:var(--text-dark);
+  font-family:'Lato',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+}
+
+/* dust */
+.dust{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+.mote{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(201,135,74,.35);animation:float-up linear infinite}
+@keyframes float-up{
+  0%  {transform:translateY(100vh) translateX(0) scale(0);opacity:0}
+  10% {opacity:1}
+  90% {opacity:.5}
+  100%{transform:translateY(-10vh) translateX(40px) scale(1.5);opacity:0}
+}
+
+/* ── HEADER ── */
+header{
+  padding:1.1rem 2rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(to bottom,rgba(245,240,225,.98),rgba(245,240,225,.95));
+  backdrop-filter:blur(8px);
+  position:sticky;top:0;z-index:100;
+}
+.logo{
+  font-family:'Playfair Display',serif;
+  font-size:1.5rem;font-weight:600;
+  color:var(--brown);letter-spacing:.03em;
+}
+.logo span{color:var(--green);font-style:italic;font-weight:400}
+.back-btn{
+  background:transparent;
+  border:1.5px solid var(--border2);
+  color:var(--text-mid);
+  padding:.35rem 1rem;border-radius:30px;
+  cursor:pointer;font-family:'Lato',sans-serif;
+  font-size:.75rem;font-weight:400;
+  letter-spacing:.1em;text-transform:uppercase;
+  transition:all .25s;text-decoration:none;display:inline-block;
+}
+.back-btn:hover{border-color:var(--brown);color:var(--brown);background:rgba(107,79,53,.05)}
+
+/* ── MAIN ── */
+main{
+  max-width:880px;width:100%;
+  margin:3rem auto;
+  padding:0 2rem;
+  flex:1;
+  position:relative;z-index:1;
+}
+
+.page-eyebrow{
+  font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--amber);margin-bottom:.7rem;
+}
+h1{
+  font-family:'Playfair Display',serif;
+  font-size:2.2rem;font-weight:400;
+  color:var(--brown);margin-bottom:.4rem;line-height:1.2;
+}
+h1 em{font-style:italic;color:var(--green)}
+.subtitle{
+  color:var(--text-mid);margin-bottom:2.2rem;
+  font-size:.88rem;font-style:italic;line-height:1.7;
+}
+
+/* ── SUMMARY BAR ── */
+.summary-bar{
+  background:var(--warm-white);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:1rem 1.8rem;
+  display:flex;gap:2.5rem;align-items:center;
+  margin-bottom:1.6rem;
+  box-shadow:0 2px 12px var(--shadow);
+}
+.sum-item{text-align:center}
+.sum-num{
+  font-family:'Playfair Display',serif;
+  font-size:1.7rem;font-weight:600;
+}
+.sum-label{font-size:.7rem;color:var(--brown-light);margin-top:.1rem;letter-spacing:.08em;text-transform:uppercase}
+.sum-ok{color:var(--ok)}
+.sum-fail{color:var(--fail)}
+.sum-total{color:var(--brown)}
+
+/* ── RUN ALL BUTTON ── */
+.run-all-btn{
+  width:100%;background:transparent;
+  border:1.5px solid var(--border2);
+  border-radius:30px;
+  color:var(--brown);
+  font-family:'Playfair Display',serif;
+  font-size:1.05rem;font-weight:600;
+  padding:.75rem;cursor:pointer;
+  transition:all .25s;
+  margin-bottom:1.6rem;
+  letter-spacing:.04em;
+}
+.run-all-btn:hover{
+  background:var(--brown);color:var(--cream);
+  border-color:var(--brown);
+  box-shadow:0 4px 18px rgba(107,79,53,.2);
+  transform:translateY(-1px);
+}
+
+/* ── GRID ── */
+.test-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:2rem}
+@media(max-width:620px){.test-grid{grid-template-columns:1fr}}
+
+/* ── API CARDS ── */
+.api-card{
+  background:var(--warm-white);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:1.5rem;
+  transition:border-color .3s,box-shadow .3s,transform .2s;
+  box-shadow:0 2px 10px var(--shadow);
+}
+.api-card:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(107,79,53,.1)}
+.api-card.ok  {border-color:var(--ok); box-shadow:0 4px 20px rgba(90,122,92,.12)}
+.api-card.fail{border-color:var(--fail);box-shadow:0 4px 20px rgba(160,80,58,.1)}
+.api-card.testing{border-color:var(--amber)}
+
+.card-header{display:flex;align-items:center;gap:.85rem;margin-bottom:1rem}
+.api-icon{
+  width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+}
+.icon-nvidia  {background:linear-gradient(135deg,#7aaa38,#3a5c10)}
+.icon-tmdb    {background:linear-gradient(135deg,#3aaa70,#0a6030)}
+.icon-openlibrary{background:linear-gradient(135deg,var(--amber-light),#8a5020)}
+.card-name{
+  font-family:'Playfair Display',serif;
+  font-size:1.1rem;font-weight:600;
+  color:var(--brown);
+}
+.card-desc{font-size:.75rem;color:var(--brown-light);font-style:italic;margin-top:.1rem}
+
+/* ── STATUS BADGE ── */
+.status-badge{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.25rem .75rem;border-radius:999px;
+  font-size:.75rem;font-weight:400;
+  margin-bottom:.9rem;letter-spacing:.05em;text-transform:uppercase;
+}
+.status-badge.ok    {background:rgba(90,122,92,.1);color:var(--ok);  border:1px solid rgba(90,122,92,.3)}
+.status-badge.fail  {background:rgba(160,80,58,.1);color:var(--fail);border:1px solid rgba(160,80,58,.3)}
+.status-badge.testing{background:rgba(201,135,74,.1);color:var(--amber);border:1px solid rgba(201,135,74,.3)}
+.status-badge.idle  {background:rgba(107,79,53,.06);color:var(--brown-light);border:1px solid var(--border)}
+.dot-pulse{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* ── DETAIL BOX ── */
+.detail-box{
+  background:var(--cream);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:.85rem 1rem;
+  font-size:.78rem;line-height:1.9;
+  min-height:68px;
+  font-family:'Courier New',monospace;
+  color:var(--text-mid);
+  word-break:break-all;white-space:pre-wrap;
+}
+.detail-box .key{color:var(--brown);font-weight:400}
+.detail-box .val{color:var(--green)}
+.detail-box .err{color:var(--fail)}
+
+/* ── RUN BUTTON ── */
+.run-btn{
+  margin-top:.9rem;width:100%;
+  background:var(--brown);
+  border:none;border-radius:30px;
+  color:var(--cream);
+  font-family:'Lato',sans-serif;
+  font-size:.75rem;font-weight:400;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:.62rem;cursor:pointer;
+  transition:transform .2s,box-shadow .2s,background .2s;
+  box-shadow:0 3px 12px rgba(107,79,53,.2);
+}
+.run-btn:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(107,79,53,.28)}
+.run-btn:disabled{opacity:.38;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ── DIVIDER ── */
+.divider{
+  display:flex;align-items:center;gap:1rem;
+  margin:0 0 1.8rem;
+}
+.divider-line{flex:1;height:1px;background:var(--brown-light);opacity:.25}
+.divider-icon{color:var(--amber);font-size:.9rem}
+
+/* ── REVEAL ── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<div class="dust" id="dust"></div>
+
+<header>
+  <div class="logo">Biblio <span>AI</span></div>
+  <a href="/" class="back-btn">← Back to Chat</a>
+</header>
+
+<main>
+  <p class="page-eyebrow reveal">Diagnostics</p>
+  <h1 class="reveal">API <em>Status</em> Checker</h1>
+  <p class="subtitle reveal">Test all external connections used by Biblio AI. Run all at once or check each service individually.</p>
+
+  <div class="summary-bar reveal">
+    <div class="sum-item"><div class="sum-num sum-total" id="sum-total">3</div><div class="sum-label">Total</div></div>
+    <div class="sum-item"><div class="sum-num sum-ok" id="sum-ok">—</div><div class="sum-label">Passing</div></div>
+    <div class="sum-item"><div class="sum-num sum-fail" id="sum-fail">—</div><div class="sum-label">Failing</div></div>
+  </div>
+
+  <button class="run-all-btn reveal" id="run-all">Run All Tests</button>
+
+  <div class="divider reveal">
+    <div class="divider-line"></div>
+    <span class="divider-icon">✦</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="test-grid">
+
+    <!-- NVIDIA API -->
+    <div class="api-card reveal" id="card-nvidia">
+      <div class="card-header">
+        <div class="api-icon icon-nvidia">🤖</div>
+        <div>
+          <div class="card-name">NVIDIA AI (LLaMA 4)</div>
+          <div class="card-desc">Conversational recommendations engine</div>
+        </div>
+      </div>
+      <div class="status-badge idle" id="badge-nvidia">● Idle</div>
+      <div class="detail-box" id="detail-nvidia">Press "Test" to check the API…</div>
+      <button class="run-btn" id="btn-nvidia" onclick="testNvidia()">Test NVIDIA API</button>
+    </div>
+
+    <!-- TMDB API -->
+    <div class="api-card reveal" id="card-tmdb">
+      <div class="card-header">
+        <div class="api-icon icon-tmdb">🎬</div>
+        <div>
+          <div class="card-name">TMDB</div>
+          <div class="card-desc">Movie posters, ratings & detail links</div>
+        </div>
+      </div>
+      <div class="status-badge idle" id="badge-tmdb">● Idle</div>
+      <div class="detail-box" id="detail-tmdb">Press "Test" to check the API…</div>
+      <button class="run-btn" id="btn-tmdb" onclick="testTMDB()">Test TMDB API</button>
+    </div>
+
+    <!-- Open Library API -->
+    <div class="api-card reveal" id="card-openlibrary">
+      <div class="card-header">
+        <div class="api-icon icon-openlibrary">📚</div>
+        <div>
+          <div class="card-name">Open Library</div>
+          <div class="card-desc">Book covers & detail links</div>
+        </div>
+      </div>
+      <div class="status-badge idle" id="badge-openlibrary">● Idle</div>
+      <div class="detail-box" id="detail-openlibrary">Press "Test" to check the API…</div>
+      <button class="run-btn" id="btn-openlibrary" onclick="testOpenLibrary()">Test Open Library</button>
+    </div>
+
+  </div>
+</main>
+
+<script>
+let results = { nvidia: null, tmdb: null, openlibrary: null };
+
+function setTesting(id) {
+  document.getElementById('card-' + id).className = 'api-card testing';
+  const b = document.getElementById('badge-' + id);
+  b.className = 'status-badge testing';
+  b.innerHTML = '<span class="dot-pulse"></span> Testing…';
+  document.getElementById('btn-' + id).disabled = true;
+  document.getElementById('detail-' + id).innerHTML = 'Sending request…';
+}
+
+function setResult(id, ok, lines) {
+  results[id] = ok;
+  document.getElementById('card-' + id).className = 'api-card ' + (ok ? 'ok' : 'fail');
+  const b = document.getElementById('badge-' + id);
+  b.className = 'status-badge ' + (ok ? 'ok' : 'fail');
+  b.innerHTML = ok ? '✓ Connected' : '✗ Failed';
+  document.getElementById('detail-' + id).innerHTML = lines;
+  document.getElementById('btn-' + id).disabled = false;
+  updateSummary();
+}
+
+function updateSummary() {
+  const vals = Object.values(results).filter(v => v !== null);
+  document.getElementById('sum-ok').textContent   = vals.filter(v => v === true).length;
+  document.getElementById('sum-fail').textContent = vals.filter(v => v === false).length;
+}
+
+function row(key, val, cls='') {
+  return `<span class="key">${key}:</span> <span class="val ${cls}">${val}</span>\n`;
+}
+function errRow(msg) {
+  return `<span class="err">✗ ${escHtml(msg)}</span>`;
+}
+
+async function testNvidia() {
+  setTesting('nvidia');
+  try {
+    const res  = await fetch('/api-test/nvidia', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      setResult('nvidia', true,
+        row('status', 'HTTP ' + data.status_code) +
+        row('model', escHtml(data.model)) +
+        row('reply_preview', '"' + escHtml(data.reply_preview) + '"')
+      );
+    } else {
+      setResult('nvidia', false,
+        row('status', 'HTTP ' + (data.status_code || '—')) +
+        errRow(data.error || 'Unknown error')
+      );
+    }
+  } catch(e) {
+    setResult('nvidia', false, errRow('Network error: ' + e.message));
+  }
+}
+
+async function testTMDB() {
+  setTesting('tmdb');
+  try {
+    const res  = await fetch('/api-test/tmdb', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      setResult('tmdb', true,
+        row('status', 'HTTP ' + data.status_code) +
+        row('sample_movie', escHtml(data.sample_title)) +
+        row('poster', data.has_poster ? '✓ present' : '✗ missing') +
+        row('rating', data.rating)
+      );
+    } else {
+      setResult('tmdb', false,
+        row('status', 'HTTP ' + (data.status_code || '—')) +
+        errRow(data.error || 'Unknown error')
+      );
+    }
+  } catch(e) {
+    setResult('tmdb', false, errRow('Network error: ' + e.message));
+  }
+}
+
+async function testOpenLibrary() {
+  setTesting('openlibrary');
+  try {
+    const res  = await fetch('/api-test/openlibrary', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      setResult('openlibrary', true,
+        row('status', 'HTTP ' + data.status_code) +
+        row('sample_book', escHtml(data.sample_title)) +
+        row('cover', data.has_cover ? '✓ present' : '✗ missing') +
+        row('year', data.year || '—')
+      );
+    } else {
+      setResult('openlibrary', false,
+        row('status', 'HTTP ' + (data.status_code || '—')) +
+        errRow(data.error || 'Unknown error')
+      );
+    }
+  } catch(e) {
+    setResult('openlibrary', false, errRow('Network error: ' + e.message));
+  }
+}
+
+document.getElementById('run-all').addEventListener('click', () => {
+  testNvidia();
+  testTMDB();
+  testOpenLibrary();
+});
+
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── DUST ──────────────────────────────────────────────────────────────────
+(function() {
+  const c = document.getElementById('dust');
+  for (let i = 0; i < 18; i++) {
+    const m = document.createElement('div');
+    m.className = 'mote';
+    m.style.left = Math.random() * 100 + 'vw';
+    m.style.animationDuration = (12 + Math.random() * 20) + 's';
+    m.style.animationDelay   = (Math.random() * 18) + 's';
+    m.style.width = m.style.height = (1.5 + Math.random() * 2.5) + 'px';
+    c.appendChild(m);
+  }
+})();
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────────────
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+</script>
+</body>
+</html>

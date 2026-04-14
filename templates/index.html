@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblio AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --cream:#f5f0e1;
+  --cream-dark:#e8e0c8;
+  --warm-white:#fdf8ef;
+  --brown:#6b4f35;
+  --brown-light:#9b7a5a;
+  --green:#5a7a5c;
+  --green-light:#8aaa7a;
+  --green-pale:#d4e6c3;
+  --text-dark:#3a2e20;
+  --text-mid:#6b5a45;
+  --amber:#c9874a;
+  --amber-light:#e8b97a;
+  --border:rgba(107,79,53,.18);
+  --border2:rgba(107,79,53,.28);
+  --shadow:rgba(58,46,32,.1);
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--cream);
+  color:var(--text-dark);
+  font-family:'Lato',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:1fr 360px;
+  grid-template-rows:auto 1fr;
+  overflow:hidden;
+}
+
+/* ── DUST PARTICLES ── */
+.dust{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+.mote{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(201,135,74,.35);animation:float-up linear infinite}
+@keyframes float-up{
+  0%  {transform:translateY(100vh) translateX(0) scale(0);opacity:0}
+  10% {opacity:1}
+  90% {opacity:.5}
+  100%{transform:translateY(-10vh) translateX(40px) scale(1.5);opacity:0}
+}
+
+/* ── HEADER ── */
+header{
+  grid-column:1/-1;
+  padding:1.1rem 2rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(to bottom,rgba(245,240,225,.98),rgba(245,240,225,.95));
+  backdrop-filter:blur(8px);
+  position:relative;z-index:10;
+}
+.logo{
+  font-family:'Playfair Display',serif;
+  font-size:1.5rem;font-weight:600;
+  color:var(--brown);
+  letter-spacing:.03em;
+}
+.logo span{color:var(--green);font-style:italic;font-weight:400}
+.header-btns{display:flex;gap:.5rem;align-items:center}
+#new-chat,#api-test-btn{
+  background:transparent;
+  border:1.5px solid var(--border2);
+  color:var(--text-mid);
+  padding:.35rem 1rem;
+  border-radius:30px;
+  cursor:pointer;
+  font-family:'Lato',sans-serif;
+  font-size:.75rem;font-weight:400;
+  letter-spacing:.1em;text-transform:uppercase;
+  transition:all .25s;
+  text-decoration:none;display:inline-block;
+}
+#new-chat:hover{border-color:var(--brown);color:var(--brown);background:rgba(107,79,53,.05)}
+#api-test-btn:hover{border-color:var(--green);color:var(--green);background:rgba(90,122,92,.05)}
+
+/* ── CHAT PANEL ── */
+#chat-panel{
+  grid-column:1;grid-row:2;
+  display:flex;flex-direction:column;
+  height:calc(100vh - 60px);
+  position:relative;z-index:1;
+  background:var(--warm-white);
+}
+#messages{
+  flex:1;overflow-y:auto;
+  padding:2rem 2.2rem;
+  display:flex;flex-direction:column;gap:1.2rem;
+  scroll-behavior:smooth;
+}
+#messages::-webkit-scrollbar{width:4px}
+#messages::-webkit-scrollbar-thumb{background:var(--cream-dark);border-radius:4px}
+#messages::-webkit-scrollbar-track{background:transparent}
+
+/* ── BUBBLES ── */
+.bubble{
+  max-width:78%;
+  padding:1rem 1.3rem;
+  border-radius:18px;
+  line-height:1.75;
+  font-size:.92rem;
+  font-weight:300;
+  animation:pop .3s cubic-bezier(.34,1.3,.64,1);
+}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+
+.bubble.user{
+  align-self:flex-end;
+  background:var(--brown);
+  color:var(--cream);
+  border-bottom-right-radius:5px;
+  box-shadow:0 3px 14px rgba(107,79,53,.2);
+}
+.bubble.ai{
+  align-self:flex-start;
+  background:var(--cream);
+  border:1px solid var(--border);
+  border-bottom-left-radius:5px;
+  box-shadow:0 2px 10px var(--shadow);
+  color:var(--text-dark);
+}
+.bubble.ai .sender{
+  font-size:.68rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--amber);
+  font-weight:400;
+  margin-bottom:.45rem;
+}
+
+/* ── RECOMMENDATION CARDS ── */
+.rec-row{display:flex;flex-direction:column;gap:.65rem;margin-top:.8rem}
+.rec-mini{
+  display:flex;gap:.85rem;
+  background:var(--warm-white);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:.8rem;
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s,border-color .2s;
+}
+.rec-mini:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 22px rgba(107,79,53,.12);
+  border-color:var(--brown-light);
+}
+.rec-mini img{
+  width:50px;height:72px;
+  object-fit:cover;
+  border-radius:8px;
+  flex-shrink:0;
+  background:var(--cream-dark);
+  box-shadow:0 2px 8px var(--shadow);
+}
+.rec-mini-info{flex:1;min-width:0}
+.rec-mini-title{
+  font-family:'Playfair Display',serif;
+  font-size:.98rem;font-weight:600;
+  color:var(--brown);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rec-mini-creator{color:var(--brown-light);font-size:.77rem;margin:.18rem 0 .22rem}
+.rec-mini-why{font-size:.8rem;color:var(--text-mid);line-height:1.5;font-style:italic}
+.cat-badge{
+  font-size:.66rem;
+  padding:.12rem .55rem;
+  border-radius:999px;
+  margin-top:.35rem;
+  display:inline-block;
+  font-weight:400;letter-spacing:.05em;text-transform:uppercase;
+}
+.cat-badge.movie{border:1px solid var(--amber);color:var(--amber);background:rgba(201,135,74,.08)}
+.cat-badge.book{border:1px solid var(--green);color:var(--green);background:rgba(90,122,92,.08)}
+.rating{font-size:.74rem;color:var(--amber);margin-left:.3rem;font-weight:400}
+
+/* ── INPUT AREA ── */
+#input-area{
+  padding:.9rem 2rem 1.1rem;
+  border-top:1px solid var(--border);
+  background:linear-gradient(to top,rgba(245,240,225,.98),rgba(253,248,239,.95));
+  display:flex;gap:.7rem;align-items:flex-end;
+}
+#msg{
+  flex:1;
+  background:var(--warm-white);
+  border:1.5px solid var(--border2);
+  border-radius:14px;
+  color:var(--text-dark);
+  font-family:'Lato',sans-serif;
+  font-size:.9rem;font-weight:300;
+  padding:.7rem 1rem;
+  outline:none;resize:none;
+  max-height:120px;
+  transition:border-color .25s,box-shadow .25s;
+  line-height:1.55;
+}
+#msg:focus{
+  border-color:var(--brown-light);
+  box-shadow:0 0 0 3px rgba(107,79,53,.08);
+}
+#msg::placeholder{color:var(--brown-light);font-style:italic;opacity:.7}
+.hint{font-size:.68rem;color:var(--brown-light);padding-bottom:.8rem;white-space:nowrap;opacity:.6;letter-spacing:.05em}
+#send{
+  background:var(--brown);
+  border:none;border-radius:30px;
+  color:var(--cream);
+  font-family:'Lato',sans-serif;
+  font-size:.8rem;font-weight:400;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:.72rem 1.4rem;
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s,background .2s;
+  white-space:nowrap;
+  box-shadow:0 3px 12px rgba(107,79,53,.25);
+}
+#send:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(107,79,53,.3)}
+#send:active{transform:translateY(0)}
+#send:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  grid-column:2;grid-row:2;
+  border-left:1px solid var(--border);
+  background:var(--cream);
+  display:flex;flex-direction:column;
+  height:calc(100vh - 60px);
+  position:relative;z-index:1;
+}
+/* subtle green gradient at top of sidebar */
+#sidebar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:120px;
+  background:linear-gradient(to bottom,rgba(90,122,92,.06),transparent);
+  pointer-events:none;
+}
+.sidebar-header{
+  padding:1.1rem 1.4rem;
+  border-bottom:1px solid var(--border);
+  font-family:'Playfair Display',serif;
+  font-size:1rem;font-weight:600;
+  color:var(--brown);
+  letter-spacing:.02em;
+  position:relative;
+}
+#favs-list{flex:1;overflow-y:auto;padding:.9rem;position:relative}
+#favs-list::-webkit-scrollbar{width:3px}
+#favs-list::-webkit-scrollbar-thumb{background:var(--cream-dark);border-radius:3px}
+.empty-favs{
+  color:var(--brown-light);font-size:.83rem;
+  text-align:center;padding:3rem 1.2rem;
+  line-height:1.9;font-style:italic;
+}
+
+.fav-card{
+  background:var(--warm-white);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:.75rem;margin-bottom:.55rem;
+  display:flex;gap:.65rem;
+  transition:box-shadow .2s,border-color .2s;
+}
+.fav-card:hover{border-color:var(--border2);box-shadow:0 3px 12px var(--shadow)}
+.fav-card img{
+  width:38px;height:55px;
+  object-fit:cover;border-radius:6px;
+  background:var(--cream-dark);flex-shrink:0;
+  box-shadow:0 2px 6px var(--shadow);
+}
+.fav-title{font-size:.87rem;font-family:'Playfair Display',serif;color:var(--brown);font-weight:600}
+.fav-creator{font-size:.72rem;color:var(--brown-light);margin-top:.1rem}
+.fav-link{
+  font-size:.72rem;color:var(--green);
+  text-decoration:none;display:inline-block;margin-top:.22rem;
+  transition:color .2s;
+}
+.fav-link:hover{color:var(--brown);text-decoration:underline}
+
+/* ── MODAL ── */
+#modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(58,46,32,.55);
+  backdrop-filter:blur(6px);
+  z-index:100;align-items:center;justify-content:center;
+}
+#modal.open{display:flex}
+.modal-box{
+  background:var(--warm-white);
+  border:1px solid var(--border2);
+  border-radius:22px;
+  padding:2rem;
+  max-width:460px;width:90%;
+  position:relative;
+  animation:pop .28s cubic-bezier(.34,1.3,.64,1);
+  box-shadow:0 24px 60px rgba(58,46,32,.22);
+}
+.modal-box img{
+  width:100%;max-height:260px;
+  object-fit:cover;border-radius:14px;
+  margin-bottom:1.1rem;
+  box-shadow:0 4px 18px var(--shadow);
+}
+.modal-title{
+  font-family:'Playfair Display',serif;
+  font-size:1.5rem;font-weight:700;
+  color:var(--brown);line-height:1.25;
+}
+.modal-creator{color:var(--brown-light);margin:.3rem 0 .9rem;font-size:.87rem}
+.modal-why{
+  color:var(--text-mid);line-height:1.7;
+  font-size:.9rem;font-style:italic;
+  border-left:2px solid var(--green-pale);
+  padding-left:.85rem;
+}
+.modal-actions{display:flex;gap:.7rem;margin-top:1.3rem;flex-wrap:wrap}
+.btn-detail{
+  padding:.52rem 1.2rem;border-radius:30px;
+  font-family:'Lato',sans-serif;font-size:.8rem;font-weight:400;
+  letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;text-decoration:none;
+  display:inline-block;transition:all .2s;
+}
+.btn-watch{
+  background:var(--brown);
+  color:var(--cream);border:none;
+  box-shadow:0 2px 10px rgba(107,79,53,.2);
+}
+.btn-watch:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(107,79,53,.28)}
+.btn-save{
+  background:transparent;
+  border:1.5px solid var(--green);
+  color:var(--green);
+}
+.btn-save:hover{background:rgba(90,122,92,.08);transform:translateY(-2px)}
+.btn-close{
+  position:absolute;top:1rem;right:1rem;
+  background:none;border:1px solid var(--border2);
+  color:var(--brown-light);border-radius:999px;
+  padding:.28rem .7rem;cursor:pointer;font-size:.78rem;
+  transition:all .2s;
+}
+.btn-close:hover{border-color:var(--brown);color:var(--brown);background:rgba(107,79,53,.05)}
+
+/* ── TYPING INDICATOR ── */
+.typing{display:flex;gap:5px;align-items:center;padding:.35rem 0}
+.dot{
+  width:6px;height:6px;
+  background:var(--brown-light);border-radius:50%;
+  animation:blink 1.4s infinite;
+}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2;transform:scale(.85)}40%{opacity:.85;transform:scale(1.15)}}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<!-- floating dust motes -->
+<div class="dust" id="dust"></div>
+
+<header>
+  <div class="logo">Biblio <span>AI</span></div>
+  <div class="header-btns">
+    <a href="/api-test" id="api-test-btn">API Status</a>
+    <button id="new-chat">↺ New Chat</button>
+  </div>
+</header>
+
+<div id="chat-panel">
+  <div id="messages"></div>
+  <div id="input-area">
+    <textarea id="msg" placeholder="Tell me what you enjoy… (Enter to send, Shift+Enter for new line)" rows="1"></textarea>
+    <span class="hint">Enter ↵</span>
+    <button id="send">Send</button>
+  </div>
+</div>
+
+<div id="sidebar">
+  <div class="sidebar-header">⭐ Saved Favourites</div>
+  <div id="favs-list"><p class="empty-favs">Your saved movies &amp; books<br>will appear here.</p></div>
+</div>
+
+<div id="modal">
+  <div class="modal-box">
+    <button class="btn-close" id="modal-close">✕</button>
+    <img id="modal-img" src="" alt="">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-creator" id="modal-creator"></div>
+    <div class="modal-why" id="modal-why"></div>
+    <div class="modal-actions">
+      <a class="btn-detail btn-watch" id="modal-link" href="#" target="_blank">View Details →</a>
+      <button class="btn-detail btn-save" id="modal-save">♥ Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SESSION_ID = localStorage.getItem('cineread_session') || (() => {
+  const id = 'session_' + Math.random().toString(36).slice(2,9);
+  localStorage.setItem('cineread_session', id);
+  return id;
+})();
+let currentRec   = null;
+const recsStore  = [];
+
+// ── DOM refs ──────────────────────────────────────────────────────────────
+const messagesEl = document.getElementById('messages');
+const msgInput   = document.getElementById('msg');
+const sendBtn    = document.getElementById('send');
+const modal      = document.getElementById('modal');
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  await restoreSession();
+  loadFavourites();
+});
+
+async function restoreSession() {
+  try {
+    const res  = await fetch(`/history?session_id=${SESSION_ID}`);
+    const data = await res.json();
+
+    if (data.messages && data.messages.length > 0) {
+      // Rebuild conversation from DB
+      data.messages.forEach(msg => {
+        if (msg.role === 'user') {
+          addBubble('user', msg.content);
+        } else {
+          addAIBubble(msg.message, msg.recommendations);
+        }
+      });
+    } else {
+      // Fresh session — show greeting
+      addBubble('ai', "Hello! I'm your personal movie & book recommender. What kind of stories do you enjoy — genres, moods, or tell me some favourites!");
+    }
+  } catch {
+    addBubble('ai', "Hello! I'm your personal movie & book recommender. What kind of stories do you enjoy — genres, moods, or tell me some favourites!");
+  }
+}
+
+// ── SEND MESSAGE ──────────────────────────────────────────────────────────
+async function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text || sendBtn.disabled) return;
+
+  addBubble('user', text);
+  msgInput.value = '';
+  msgInput.style.height = 'auto';
+  sendBtn.disabled = true;
+
+  const typingEl = addTyping();
+
+  try {
+    const res  = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({message: text, session_id: SESSION_ID})
+    });
+    const data = await res.json();
+    typingEl.remove();
+
+    if (!res.ok) throw new Error(data.error || 'Error');
+
+    addAIBubble(data.message, data.recommendations);
+  } catch(e) {
+    typingEl.remove();
+    addBubble('ai', '⚠ ' + e.message);
+  } finally {
+    sendBtn.disabled = false;
+    msgInput.focus();
+  }
+}
+
+// ── BUBBLE BUILDERS ───────────────────────────────────────────────────────
+function addBubble(role, text) {
+  const div = document.createElement('div');
+  div.className = `bubble ${role}`;
+  if (role === 'ai') div.innerHTML = `<div class="sender">Biblio AI</div>${escHtml(text)}`;
+  else div.textContent = text;
+  observeReveal(div);
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return div;
+}
+
+function addAIBubble(message, recs) {
+  const div = document.createElement('div');
+  div.className = 'bubble ai';
+  let html = `<div class="sender">Biblio AI</div>${escHtml(message)}`;
+
+  if (recs && recs.length) {
+    html += '<div class="rec-row">';
+    recs.forEach(r => {
+      const idx     = recsStore.push(r) - 1;
+      const poster  = r.poster_url || 'https://via.placeholder.com/52x75/0f0f1a/444?text=?';
+      const rating  = r.rating ? `<span class="rating">★ ${r.rating}</span>` : '';
+      const badge   = `<span class="cat-badge ${r.category}">${r.category}</span>`;
+      html += `
+        <div class="rec-mini" data-rec-idx="${idx}">
+          <img src="${escHtml(poster)}" alt="${escHtml(r.title)}" onerror="this.src='https://via.placeholder.com/52x75/0f0f1a/444?text=?'">
+          <div class="rec-mini-info">
+            <div class="rec-mini-title">${escHtml(r.title)}${rating}</div>
+            <div class="rec-mini-creator">${escHtml(r.creator||'')}</div>
+            <div class="rec-mini-why">${escHtml(r.why||'')}</div>
+            ${badge}
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  div.innerHTML = html;
+  div.querySelectorAll('.rec-mini').forEach(el => {
+    el.addEventListener('click', () => openModal(recsStore[+el.dataset.recIdx]));
+  });
+  observeReveal(div);
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addTyping() {
+  const div = document.createElement('div');
+  div.className = 'bubble ai';
+  div.innerHTML = '<div class="sender">Biblio AI</div><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return div;
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────
+function openModal(rec) {
+  currentRec = rec;
+  document.getElementById('modal-img').src    = rec.poster_url || 'https://via.placeholder.com/460x280/0f0f1a/444?text=No+Image';
+  document.getElementById('modal-title').textContent   = rec.title || '';
+  document.getElementById('modal-creator').textContent = rec.creator || '';
+  document.getElementById('modal-why').textContent     = rec.why || '';
+  const link = document.getElementById('modal-link');
+  link.href = rec.detail_url || '#';
+  link.textContent = rec.category === 'movie' ? 'View on TMDB →' : 'View on Open Library →';
+  modal.classList.add('open');
+}
+
+document.getElementById('modal-close').addEventListener('click', () => modal.classList.remove('open'));
+modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+document.getElementById('modal-save').addEventListener('click', async () => {
+  if (!currentRec) return;
+  await fetch('/favourite', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({...currentRec, session_id: SESSION_ID})
+  });
+  modal.classList.remove('open');
+  loadFavourites();
+});
+
+// ── FAVOURITES SIDEBAR ────────────────────────────────────────────────────
+async function loadFavourites() {
+  const res  = await fetch(`/favourites?session_id=${SESSION_ID}`);
+  const data = await res.json();
+  const list = document.getElementById('favs-list');
+  if (!data.favourites || !data.favourites.length) {
+    list.innerHTML = '<p class="empty-favs">Your saved movies &amp; books<br>will appear here.</p>';
+    return;
+  }
+  list.innerHTML = data.favourites.map(f => `
+    <div class="fav-card">
+      <img src="${f.poster_url||'https://via.placeholder.com/40x58/0f0f1a/444?text=?'}" onerror="this.src='https://via.placeholder.com/40x58/0f0f1a/444?text=?'" alt="">
+      <div>
+        <div class="fav-title">${escHtml(f.title)}</div>
+        <div class="fav-creator">${escHtml(f.creator||'')}</div>
+        <a class="fav-link" href="${f.detail_url||'#'}" target="_blank">View →</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── NEW CHAT ──────────────────────────────────────────────────────────────
+document.getElementById('new-chat').addEventListener('click', async () => {
+  await fetch('/clear', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({session_id: SESSION_ID})
+  });
+  recsStore.length = 0;
+  messagesEl.innerHTML = '';
+  addBubble('ai', 'Fresh start! Tell me what kind of movies or books you enjoy.');
+  loadFavourites(); // favourites are kept — just refresh the sidebar to confirm
+});
+
+// ── EVENTS ────────────────────────────────────────────────────────────────
+sendBtn.addEventListener('click', sendMessage);
+
+// Enter = send | Shift+Enter = new line
+msgInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+msgInput.addEventListener('input', () => {
+  msgInput.style.height = 'auto';
+  msgInput.style.height = msgInput.scrollHeight + 'px';
+});
+
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── DUST PARTICLES ────────────────────────────────────────────────────────
+(function spawnDust() {
+  const container = document.getElementById('dust');
+  for (let i = 0; i < 18; i++) {
+    const m = document.createElement('div');
+    m.className = 'mote';
+    m.style.left      = Math.random() * 100 + 'vw';
+    m.style.animationDuration = (12 + Math.random() * 20) + 's';
+    m.style.animationDelay   = (Math.random() * 18) + 's';
+    m.style.width = m.style.height = (1.5 + Math.random() * 2.5) + 'px';
+    container.appendChild(m);
+  }
+})();
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────────────
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+function observeReveal(el) { el.classList.add('reveal'); revealObserver.observe(el); }
+</script>
+</body>
+</html>
