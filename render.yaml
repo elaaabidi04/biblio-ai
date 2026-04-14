@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: biblio-ai
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn recommendation_app:app
+    envVars:
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: TMDB_API_KEY
+        sync: false
