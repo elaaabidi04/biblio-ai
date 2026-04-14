@@ -515,6 +515,5 @@ def clear():
 # ── ENTRY POINT ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     init_db()
-    print("Hybrid Recommender running at http://localhost:5002")
-    print("API Status page: http://localhost:5002/api-test")
-    app.run(debug=True, port=5002)
+    port = int(os.environ.get("PORT", 5002))
+    app.run(host="0.0.0.0", port=port)
