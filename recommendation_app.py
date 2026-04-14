@@ -46,14 +46,12 @@ OPEN_LIBRARY   = "https://openlibrary.org"
 
 # ── MYSQL CONFIG (XAMPP defaults) ────────────────────────────────────────────
 DB_CONFIG = {
-    "host":     "localhost",
-    "port":     3306,
-    "user":     "root",
-    "password": os.environ.get("DB_PASSWORD", ""),
-    "database": "recommender_db"
+    "host":     os.environ.get("MYSQLHOST",     "localhost"),
+    "port":     int(os.environ.get("MYSQLPORT", "3306")),
+    "user":     os.environ.get("MYSQLUSER",     "root"),
+    "password": os.environ.get("MYSQLPASSWORD", ""),
+    "database": os.environ.get("MYSQLDATABASE", "recommender_db")
 }
-
-
 # ══════════════════════════════════════════════════════════════════════════════
 #  DATABASE LAYER
 # ══════════════════════════════════════════════════════════════════════════════
