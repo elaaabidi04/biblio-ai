@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Biblio AI</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -68,6 +69,8 @@ header{
   color:var(--brown);
   letter-spacing:.03em;
 }
+.logo{display:flex;align-items:center;gap:.55rem}
+#nav-logo{height:32px;width:auto;object-fit:contain}
 .logo span{color:var(--green);font-style:italic;font-weight:400}
 .header-btns{display:flex;gap:.5rem;align-items:center}
 #new-chat,#api-test-btn{
@@ -549,7 +552,10 @@ header{
 <div class="dust" id="dust"></div>
 
 <header>
-  <div class="logo">Biblio <span>AI</span></div>
+  <div class="logo">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Biblio AI" id="nav-logo">
+    Biblio <span>AI</span>
+  </div>
   <div class="header-btns">
     <button id="lock-btn" title="Unlock unlimited messages">🔒 Locked</button>
     <a href="/api-test" id="api-test-btn">API Status</a>
