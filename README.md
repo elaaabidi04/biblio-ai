@@ -1,17 +1,40 @@
-# Biblio AI — Hybrid Movie & Book Recommender
+# Biblio AI — Movie, TV Show & Book Recommender
 
-A conversational AI-powered recommender that suggests movies and books based on your taste. Built with Flask, NVIDIA LLaMA 4, TMDB, Open Library, and MySQL.
+A conversational AI-powered recommender that suggests movies, TV shows, and books based on your taste. Chat naturally, get personalized picks with real posters and ratings, and save your favourites.
+
+**Live demo:** https://biblio-ai.onrender.com
+
+---
+
+## Author
+
+**Elaa Aabidi** — sole author and developer.
+
+### Tools used
+
+| Tool | Role |
+|---|---|
+| [Claude (Anthropic)](https://claude.ai) | AI coding assistant — used throughout development |
+| [Flora AI](https://floraai.com) | Logo generation |
+| [Render](https://render.com) | Deployment and hosting |
+| [Aiven](https://aiven.io) | Managed MySQL database (production) |
+| [NVIDIA LLaMA 4](https://www.nvidia.com/en-us/ai/) | Recommendation AI model |
+| [TMDB](https://www.themoviedb.org) | Movie and TV show posters, ratings, and links |
+| [Open Library](https://openlibrary.org) | Book covers and detail links |
 
 ---
 
 ## Features
 
-- **Conversational AI** — asks you 1–2 questions about your mood and taste before recommending
-- **Movie enrichment** — pulls real posters, ratings, and TMDB detail links for every movie
-- **Book enrichment** — pulls cover images and Open Library detail links for every book
-- **Save favourites** — heart any recommendation to save it to your sidebar
-- **Persistent sessions** — conversation history and favourites survive page refreshes and navigation
-- **API Status page** — test all three external APIs at `/api-test` before running
+- **Conversational AI** — asks 1–2 questions about your mood and taste before recommending
+- **Three categories** — movies, TV shows, and books, each visually distinct
+- **Real posters & ratings** — pulled live from TMDB and Open Library
+- **Save favourites** — save any recommendation to your sidebar with one click
+- **Delete favourites** — remove saved items individually
+- **Access lock** — 4 free messages, then a password is required to continue
+- **Persistent sessions** — conversation history and favourites survive page refresh
+- **Responsive design** — works on desktop and mobile
+- **Resizable sidebar** — drag the sidebar edge to resize (desktop)
 
 ---
 
@@ -19,11 +42,16 @@ A conversational AI-powered recommender that suggests movies and books based on 
 
 ```
 recommendation/
-├── recommendation_app.py   # Flask backend — all routes, DB, and API logic
-├── .env                    # Your secret API keys (never uploaded)
-├── .env.example            # Safe template — shows what keys are needed
-├── .gitignore              # Tells Git to ignore .env and cache files
+├── recommendation_app.py   # Flask backend — all routes, DB, AI, and API logic
+├── requirements.txt        # Python dependencies
+├── ca.pem                  # Aiven SSL certificate (production)
+├── .env                    # Your secret keys (never uploaded)
+├── .env.example            # Safe template — copy this to .env
+├── .gitignore              # Keeps .env and cache out of Git
 ├── README.md               # This file
+├── static/
+│   ├── logo.png            # Original logo (Flora AI)
+│   └── favicon.png         # Cropped logo for navbar and browser tab
 └── templates/
     ├── index.html          # Main chat UI
     └── test_apis.html      # API status checker page
@@ -34,94 +62,82 @@ recommendation/
 ## Requirements
 
 - Python 3.8+
-- XAMPP (Apache + MySQL)
-- A free TMDB account for the API key
-- An NVIDIA API key (for LLaMA 4)
+- A MySQL database (XAMPP locally, or Aiven for production)
+- Free TMDB account → API Read Access Token
+- NVIDIA API key (for LLaMA 4)
 
 ---
 
-## Setup
+## Local Setup
 
-### 1. Install Python dependencies
+### 1. Install dependencies
 
 ```bash
-pip install flask flask-cors requests mysql-connector-python python-dotenv
+pip install -r requirements.txt
 ```
 
-### 2. Start XAMPP
-
-Open the XAMPP Control Panel and start both **Apache** and **MySQL**.
-
-### 3. Create the database
-
-Open **phpMyAdmin** at `http://localhost/phpmyadmin` and create a new database named:
-
-```
-recommender_db
-```
-
-The app will create the required tables automatically on first run.
-
-### 4. Set up your API keys
-
-Copy the example file and fill in your real keys:
+### 2. Set up environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Then open `.env` and replace the placeholders:
-
-```env
-NVIDIA_API_KEY=your_nvidia_key_here
-TMDB_API_KEY=your_tmdb_read_access_token_here
-DB_PASSWORD=
-```
+Open `.env` and fill in your keys:
 
 | Variable | Where to get it |
 |---|---|
-| `NVIDIA_API_KEY` | NVIDIA API portal |
-| `TMDB_API_KEY` | themoviedb.org/settings/api → **API Read Access Token** (the long `eyJ...` token, not the short v3 key) |
-| `DB_PASSWORD` | Your MySQL password — leave blank for XAMPP default |
+| `NVIDIA_API_KEY` | [NVIDIA API portal](https://developer.nvidia.com) |
+| `TMDB_API_KEY` | [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) — use the long `eyJ...` Read Access Token |
+| `MYSQLPASSWORD` | Your MySQL root password (blank for XAMPP default) |
+| `UNLOCK_PASSWORD` | Any password you want users to enter after 4 free messages |
 
-> **Important:** The `.env` file is listed in `.gitignore` and will never be uploaded to GitHub. Never paste real keys directly into your Python code.
+> `.env` is in `.gitignore` and will never be committed to Git.
 
-### 5. Run the app
+### 3. Start MySQL
+
+**XAMPP:** Open the Control Panel and start MySQL.  
+The app creates the required tables automatically on first run.
+
+### 4. Run
 
 ```bash
 python recommendation_app.py
 ```
 
-### 6. Open in browser
-
-| Page | URL |
-|---|---|
-| Chat | http://localhost:5002 |
-| API Status | http://localhost:5002/api-test |
+Open http://localhost:5002
 
 ---
 
-## Security — Keeping Keys Safe
+## Deploying to Render + Aiven
 
-This project uses `python-dotenv` to load secrets from a local `.env` file at runtime.
+### 1. Create a free MySQL database on Aiven
+
+1. Sign up at [aiven.io](https://aiven.io)
+2. Create a **MySQL** service on the free plan
+3. Download the **CA certificate** → save as `ca.pem` in the project root
+4. Note your host, port, user, password, and database name
+
+### 2. Set environment variables on Render
+
+Go to your Render service → **Environment** and add:
+
+| Key | Value |
+|---|---|
+| `MYSQLHOST` | Your Aiven host |
+| `MYSQLPORT` | Your Aiven port (usually 5-digit, not 3306) |
+| `MYSQLUSER` | `avnadmin` |
+| `MYSQLPASSWORD` | Your Aiven password |
+| `MYSQLDATABASE` | `defaultdb` |
+| `MYSQL_SSL` | `true` |
+| `MYSQL_SSL_CA` | `ca.pem` |
+| `NVIDIA_API_KEY` | Your NVIDIA key |
+| `TMDB_API_KEY` | Your TMDB token |
+| `UNLOCK_PASSWORD` | Your chosen access password |
+
+### 3. Set the start command on Render
 
 ```
-.env          ← your real keys — kept LOCAL, never uploaded
-.env.example  ← a safe placeholder template — safe to upload
-.gitignore    ← tells Git to ignore .env
-```
-
-**What each file does:**
-
-- `.env` — loaded automatically when the app starts. Contains your real API keys. Git will never track this file.
-- `.env.example` — a committed template with placeholder values so anyone cloning the repo knows what keys they need.
-- `.gitignore` — prevents `.env`, `__pycache__`, and `.pyc` files from ever being committed.
-
-If you clone this repo fresh, just run:
-
-```bash
-cp .env.example .env
-# then fill in your real keys in .env
+gunicorn recommendation_app:app
 ```
 
 ---
@@ -139,20 +155,15 @@ Load full history → send to NVIDIA LLaMA 4
     │
     ▼
 AI returns JSON  ──► still gathering info?  ──► follow-up question
-    │                        │
-    │                        ▼
-    │               {message, recommendations: []}
     │
     ▼ recommendations ready
 Enrich each item:
-  movie → TMDB search (poster, rating, link)
-  book  → Open Library search (cover, link)
+  movie  → TMDB /search/movie  (poster, rating, link)
+  tvshow → TMDB /search/tv     (poster, rating, link)
+  book   → Open Library search (cover, link)
     │
     ▼
-Save enriched response to MySQL
-    │
-    ▼
-Return to frontend → render cards
+Save enriched response to MySQL → return to frontend
 ```
 
 ---
@@ -163,25 +174,24 @@ Return to frontend → render cards
 |---|---|---|
 | `GET` | `/` | Main chat page |
 | `POST` | `/chat` | Send a message, get AI response |
-| `GET` | `/history` | Load conversation history for a session |
-| `POST` | `/clear` | Clear conversation history (keeps favourites) |
-| `POST` | `/favourite` | Save a recommendation to favourites |
-| `GET` | `/favourites` | Get all saved favourites for a session |
+| `GET` | `/history` | Load conversation history |
+| `POST` | `/clear` | Clear conversation (keeps favourites) |
+| `POST` | `/favourite` | Save a recommendation |
+| `GET` | `/favourites` | Get all saved favourites |
+| `DELETE` | `/favourite/<id>` | Delete a saved favourite |
+| `POST` | `/unlock` | Verify access password |
 | `GET` | `/api-test` | API status checker page |
-| `POST` | `/api-test/nvidia` | Test NVIDIA API connection |
-| `POST` | `/api-test/tmdb` | Test TMDB API connection |
-| `POST` | `/api-test/openlibrary` | Test Open Library connection |
 
 ---
 
-## Database Tables
+## Database Schema
 
 **`sessions`** — conversation history
 
 | Column | Type | Description |
 |---|---|---|
 | id | INT | Auto-increment primary key |
-| session | VARCHAR(100) | Session ID from the browser |
+| session | VARCHAR(100) | Browser session ID |
 | role | VARCHAR(20) | `user` or `assistant` |
 | content | TEXT | Message text or JSON response |
 | created_at | DATETIME | Timestamp |
@@ -191,22 +201,11 @@ Return to frontend → render cards
 | Column | Type | Description |
 |---|---|---|
 | id | INT | Auto-increment primary key |
-| session | VARCHAR(100) | Session ID from the browser |
-| category | VARCHAR(20) | `movie` or `book` |
+| session | VARCHAR(100) | Browser session ID |
+| category | VARCHAR(20) | `movie`, `tvshow`, or `book` |
 | title | VARCHAR(255) | Title |
-| creator | VARCHAR(255) | Director or author |
+| creator | VARCHAR(255) | Director, showrunner, or author |
 | poster_url | TEXT | Image URL |
-| rating | FLOAT | TMDB rating (movies only) |
+| rating | FLOAT | TMDB rating |
 | detail_url | TEXT | Link to TMDB or Open Library |
 | saved_at | DATETIME | Timestamp |
-
----
-
-## Session Persistence
-
-Each browser generates a unique session ID on first visit and stores it in `localStorage`. This means:
-
-- Refreshing the page restores your full conversation and favourites
-- Navigating away and coming back restores everything
-- Clicking **New Chat** clears the conversation but **keeps your favourites**
-- Different browsers or incognito windows start a fresh session
