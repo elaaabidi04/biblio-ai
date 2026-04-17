@@ -350,7 +350,7 @@ def call_ai(history: list) -> dict:
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", ga_id=os.environ.get("GA_MEASUREMENT_ID", ""))
 
 
 @app.route("/api-test")
