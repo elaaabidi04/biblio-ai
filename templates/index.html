@@ -96,7 +96,8 @@ header{
   transition:all .25s;
 }
 #lock-btn.unlocked{border-color:var(--green);color:var(--green)}
-#lock-btn:hover{border-color:var(--brown);color:var(--brown);background:rgba(107,79,53,.05)}
+#lock-btn:not(.unlocked):hover{border-color:var(--brown);color:var(--brown);background:rgba(107,79,53,.05)}
+#lock-btn.unlocked:hover{border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.06)}
 
 /* ── LOCK MODAL ── */
 #lock-modal{
@@ -571,10 +572,14 @@ function openLockModal(sub) {
 }
 
 lockBtn.addEventListener('click', () => {
-  if (unlockToken) {
-    setLocked();
-  } else {
-    openLockModal('Enter the password to unlock unlimited messages.');
+  try {
+    if (unlockToken) {
+      setLocked();
+    } else {
+      openLockModal('Enter the password to unlock unlimited messages.');
+    }
+  } catch(err) {
+    console.error('Lock button error:', err);
   }
 });
 
