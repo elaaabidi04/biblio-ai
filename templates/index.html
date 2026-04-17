@@ -71,16 +71,13 @@ header{
 }
 .logo{display:flex;align-items:center;gap:.55rem}
 #nav-logo-wrap{
-  width:100px;height:100px;
-  overflow:hidden;
-  border-radius:8px;
+  width:38px;height:38px;
   flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
 }
 #nav-logo{
-  width:200px;height:200px;
+  width:38px;height:38px;
   object-fit:contain;
-  flex-shrink:0;
 }
 .logo span{color:var(--green);font-style:italic;font-weight:400}
 .header-btns{display:flex;gap:.5rem;align-items:center}
@@ -565,7 +562,7 @@ header{
 <header>
   <div class="logo">
     <div id="nav-logo-wrap">
-      <img src="{{ url_for('static', filename='logo.png') }}" alt="Biblio AI" id="nav-logo">
+      <img src="{{ url_for('static', filename='favicon.png') }}" alt="Biblio AI" id="nav-logo">
     </div>
     Biblio <span>AI</span>
   </div>
