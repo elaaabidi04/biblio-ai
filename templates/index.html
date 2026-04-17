@@ -226,11 +226,15 @@ header{
   display:flex;gap:.85rem;
   background:var(--warm-white);
   border:1px solid var(--border);
+  border-left:3px solid var(--border);
   border-radius:14px;
   padding:.8rem;
   cursor:pointer;
   transition:transform .2s,box-shadow .2s,border-color .2s;
 }
+.rec-mini.movie{border-left:3px solid var(--amber)}
+.rec-mini.book{border-left:3px solid var(--green)}
+.rec-mini.tvshow{border-left:3px solid var(--purple)}
 .rec-mini:hover{
   transform:translateY(-2px);
   box-shadow:0 6px 22px rgba(107,79,53,.12);
@@ -796,9 +800,10 @@ function addAIBubble(message, recs) {
       const idx     = recsStore.push(r) - 1;
       const poster  = r.poster_url || 'https://via.placeholder.com/52x75/0f0f1a/444?text=?';
       const rating  = r.rating ? `<span class="rating">★ ${r.rating}</span>` : '';
-      const badge   = `<span class="cat-badge ${r.category}">${r.category}</span>`;
+      const catLabel = r.category === 'tvshow' ? 'TV Show' : r.category;
+      const badge    = `<span class="cat-badge ${r.category}">${catLabel}</span>`;
       html += `
-        <div class="rec-mini" data-rec-idx="${idx}">
+        <div class="rec-mini ${r.category}" data-rec-idx="${idx}">
           <img src="${escHtml(poster)}" alt="${escHtml(r.title)}" onerror="this.src='https://via.placeholder.com/52x75/0f0f1a/444?text=?'">
           <div class="rec-mini-info">
             <div class="rec-mini-title">${escHtml(r.title)}${rating}</div>
@@ -872,7 +877,7 @@ async function loadFavourites() {
       <div>
         <div class="fav-title">${escHtml(f.title)}</div>
         <div class="fav-creator">${escHtml(f.creator||'')}</div>
-        <span class="cat-badge ${escHtml(f.category||'')}">${escHtml(f.category||'')}</span>
+        <span class="cat-badge ${escHtml(f.category||'')}">${f.category==='tvshow'?'TV Show':escHtml(f.category||'')}</span>
         <a class="fav-link" href="${f.detail_url||'#'}" target="_blank">View →</a>
       </div>
     </div>
