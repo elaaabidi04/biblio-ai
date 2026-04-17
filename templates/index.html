@@ -21,6 +21,8 @@
   --text-mid:#6b5a45;
   --amber:#c9874a;
   --amber-light:#e8b97a;
+  --purple:#7c5cbf;
+  --purple-light:#a98de0;
   --border:rgba(107,79,53,.18);
   --border2:rgba(107,79,53,.28);
   --shadow:rgba(58,46,32,.1);
@@ -261,6 +263,7 @@ header{
 }
 .cat-badge.movie{border:1px solid var(--amber);color:var(--amber);background:rgba(201,135,74,.08)}
 .cat-badge.book{border:1px solid var(--green);color:var(--green);background:rgba(90,122,92,.08)}
+.cat-badge.tvshow{border:1px solid var(--purple);color:var(--purple);background:rgba(124,92,191,.08)}
 .rating{font-size:.74rem;color:var(--amber);margin-left:.3rem;font-weight:400}
 
 /* ── INPUT AREA ── */
@@ -363,9 +366,11 @@ header{
 .fav-card{position:relative}
 .fav-card.movie{border-left:3px solid var(--amber)}
 .fav-card.book{border-left:3px solid var(--green)}
+.fav-card.tvshow{border-left:3px solid var(--purple)}
 .fav-card:hover{border-color:var(--border2);box-shadow:0 3px 12px var(--shadow)}
 .fav-card.movie:hover{border-left-color:var(--amber)}
 .fav-card.book:hover{border-left-color:var(--green)}
+.fav-card.tvshow:hover{border-left-color:var(--purple)}
 .fav-delete{
   position:absolute;top:.45rem;right:.5rem;
   background:none;border:none;cursor:pointer;
@@ -833,7 +838,7 @@ function openModal(rec) {
   document.getElementById('modal-why').textContent     = rec.why || '';
   const link = document.getElementById('modal-link');
   link.href = rec.detail_url || '#';
-  link.textContent = rec.category === 'movie' ? 'View on TMDB →' : 'View on Open Library →';
+  link.textContent = rec.category === 'book' ? 'View on Open Library →' : 'View on TMDB →';
   modal.classList.add('open');
 }
 
@@ -857,7 +862,7 @@ async function loadFavourites() {
   const data = await res.json();
   const list = document.getElementById('favs-list');
   if (!data.favourites || !data.favourites.length) {
-    list.innerHTML = '<p class="empty-favs">Your saved movies &amp; books<br>will appear here.</p>';
+    list.innerHTML = '<p class="empty-favs">Your saved movies, shows &amp; books<br>will appear here.</p>';
     return;
   }
   list.innerHTML = data.favourites.map(f => `

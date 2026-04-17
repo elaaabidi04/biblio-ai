@@ -221,6 +221,31 @@ def enrich_movie(title: str) -> dict:
         return {}
 
 
+def enrich_tvshow(title: str) -> dict:
+    """Searches TMDB for a TV show by title."""
+    try:
+        res = requests.get(
+            f"{TMDB_BASE}/search/tv",
+            headers={"Authorization": f"Bearer {TMDB_API_KEY}"},
+            params={"query": title, "page": 1},
+            timeout=10
+        )
+        results = res.json().get("results", [])
+        if not results:
+            return {}
+        show = results[0]
+        poster = f"{TMDB_IMG}{show['poster_path']}" if show.get("poster_path") else None
+        return {
+            "poster_url": poster,
+            "rating":     round(show.get("vote_average", 0), 1),
+            "detail_url": f"https://www.themoviedb.org/tv/{show['id']}",
+            "year":       (show.get("first_air_date") or "")[:4]
+        }
+    except Exception as e:
+        print(f"TMDB TV error for '{title}': {e}")
+        return {}
+
+
 def enrich_book(title: str, author: str = "") -> dict:
     """
     Searches Open Library for a book by title + author.
@@ -255,7 +280,7 @@ def enrich_book(title: str, author: str = "") -> dict:
 #  AI LAYER  (Conversational + Structured output)
 # ══════════════════════════════════════════════════════════════════════════════
 
-SYSTEM_PROMPT = """You are a friendly, expert media recommender for movies and books.
+SYSTEM_PROMPT = """You are a friendly, expert media recommender for movies, TV shows, and books.
 
 Your job is to have a SHORT conversation with the user to understand their taste,
 then provide personalized recommendations.
@@ -272,7 +297,7 @@ WHEN RECOMMENDING, respond with ONLY a valid JSON object like this:
     {
       "title":    "Movie or Book title",
       "creator":  "Director or Author name",
-      "category": "movie" or "book",
+      "category": "movie" or "book" or "tvshow",
       "why":      "One sentence why this matches their taste",
       "mood":     "One word vibe (e.g. thrilling, cozy, epic)"
     }
@@ -287,7 +312,7 @@ WHEN STILL GATHERING INFO (no recommendations yet), respond with ONLY:
 
 IMPORTANT:
 - Always return valid JSON, nothing else.
-- If the user asks specifically for movies, set ALL categories to "movie". If they ask specifically for books, set ALL categories to "book". Only mix if the user wants both.
+- If the user asks specifically for movies, set ALL categories to "movie". If they ask specifically for books, set ALL to "book". If they ask for TV shows, set ALL to "tvshow". Only mix categories if the user wants a mix.
 - Provide exactly 3 recommendations when ready.
 - Keep messages warm and conversational.
 """
@@ -514,6 +539,8 @@ def chat():
         extra = {}
         if rec.get("category") == "movie":
             extra = enrich_movie(rec["title"])
+        elif rec.get("category") == "tvshow":
+            extra = enrich_tvshow(rec["title"])
         elif rec.get("category") == "book":
             extra = enrich_book(rec["title"], rec.get("creator", ""))
         enriched.append({**rec, **extra})
