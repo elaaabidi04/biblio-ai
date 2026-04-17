@@ -35,7 +35,7 @@ body{
   font-weight:300;
   min-height:100vh;
   display:grid;
-  grid-template-columns:1fr 360px;
+  grid-template-columns:1fr var(--sidebar-w,360px);
   grid-template-rows:auto 1fr;
   overflow:hidden;
 }
@@ -307,6 +307,18 @@ header{
 #send:active{transform:translateY(0)}
 #send:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
 
+/* ── RESIZE HANDLE ── */
+#resize-handle{
+  grid-column:2;grid-row:2;
+  width:5px;
+  cursor:col-resize;
+  background:transparent;
+  position:relative;z-index:5;
+  margin-left:-5px;
+  transition:background .2s;
+}
+#resize-handle:hover,#resize-handle.dragging{background:var(--amber-light)}
+
 /* ── SIDEBAR ── */
 #sidebar{
   grid-column:2;grid-row:2;
@@ -454,6 +466,62 @@ header{
 /* ── SCROLL REVEAL ── */
 .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
 .reveal.visible{opacity:1;transform:none}
+
+/* ── MOBILE FAV TOGGLE ── */
+#fav-toggle{
+  display:none;
+  position:fixed;bottom:5.5rem;right:1.2rem;
+  z-index:50;
+  background:var(--brown);
+  color:var(--cream);
+  border:none;border-radius:50%;
+  width:46px;height:46px;
+  font-size:1.1rem;
+  box-shadow:0 4px 16px rgba(107,79,53,.35);
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+}
+#fav-toggle:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(107,79,53,.4)}
+
+/* ── MOBILE ── */
+@media(max-width:700px){
+  body{
+    grid-template-columns:1fr;
+    grid-template-rows:auto 1fr;
+  }
+  header{padding:.75rem 1rem}
+  .logo{font-size:1.2rem}
+  #new-chat,#api-test-btn{font-size:.65rem;padding:.28rem .7rem}
+  #lock-btn{font-size:.7rem;padding:.28rem .65rem}
+  #resize-handle{display:none}
+  #chat-panel{grid-column:1;grid-row:2;height:calc(100vh - 56px)}
+  #messages{padding:1.2rem 1rem}
+  #input-area{padding:.7rem 1rem .9rem;gap:.5rem}
+  #msg{font-size:.88rem;padding:.6rem .85rem}
+  .hint{display:none}
+  #send{padding:.65rem 1.1rem;font-size:.75rem}
+
+  #sidebar{
+    grid-column:1;grid-row:2;
+    position:fixed;
+    bottom:0;left:0;right:0;
+    height:70vh;
+    border-left:none;
+    border-top:1.5px solid var(--border2);
+    border-radius:22px 22px 0 0;
+    transform:translateY(100%);
+    transition:transform .35s cubic-bezier(.32,1,.46,1);
+    z-index:40;
+    box-shadow:0 -8px 40px rgba(58,46,32,.18);
+  }
+  #sidebar.open{transform:translateY(0)}
+  #fav-toggle{display:flex;align-items:center;justify-content:center}
+
+  .bubble{max-width:92%}
+  .modal-box{padding:1.4rem;border-radius:18px}
+  .modal-box img{max-height:180px}
+  .lock-box{padding:1.6rem 1.2rem}
+}
 </style>
 </head>
 <body>
@@ -478,6 +546,10 @@ header{
     <button id="send">Send</button>
   </div>
 </div>
+
+<div id="resize-handle"></div>
+
+<button id="fav-toggle" title="Saved Favourites">⭐</button>
 
 <div id="sidebar">
   <div class="sidebar-header">⭐ Saved Favourites</div>
@@ -852,6 +924,51 @@ const revealObserver = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
 function observeReveal(el) { el.classList.add('reveal'); revealObserver.observe(el); }
+
+// ── SIDEBAR RESIZE (desktop) ──────────────────────────────────────────────
+const resizeHandle = document.getElementById('resize-handle');
+let isResizing = false;
+
+resizeHandle.addEventListener('mousedown', e => {
+  isResizing = true;
+  resizeHandle.classList.add('dragging');
+  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'col-resize';
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isResizing) return;
+  const newW = Math.min(Math.max(window.innerWidth - e.clientX, 220), 600);
+  document.documentElement.style.setProperty('--sidebar-w', newW + 'px');
+});
+
+document.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  isResizing = false;
+  resizeHandle.classList.remove('dragging');
+  document.body.style.userSelect = '';
+  document.body.style.cursor = '';
+});
+
+// ── MOBILE FAV DRAWER ─────────────────────────────────────────────────────
+const sidebar    = document.getElementById('sidebar');
+const favToggle  = document.getElementById('fav-toggle');
+
+favToggle.addEventListener('click', () => {
+  const open = sidebar.classList.toggle('open');
+  favToggle.textContent = open ? '✕' : '⭐';
+  if (open) loadFavourites();
+});
+
+document.addEventListener('click', e => {
+  if (window.innerWidth <= 700 &&
+      sidebar.classList.contains('open') &&
+      !sidebar.contains(e.target) &&
+      e.target !== favToggle) {
+    sidebar.classList.remove('open');
+    favToggle.textContent = '⭐';
+  }
+});
 </script>
 </body>
 </html>
