@@ -309,12 +309,12 @@ header{
 
 /* ── RESIZE HANDLE ── */
 #resize-handle{
-  grid-column:2;grid-row:2;
+  position:absolute;
+  left:0;top:0;bottom:0;
   width:5px;
   cursor:col-resize;
   background:transparent;
-  position:relative;z-index:5;
-  margin-left:-5px;
+  z-index:5;
   transition:background .2s;
 }
 #resize-handle:hover,#resize-handle.dragging{background:var(--amber-light)}
@@ -547,11 +547,10 @@ header{
   </div>
 </div>
 
-<div id="resize-handle"></div>
-
 <button id="fav-toggle" title="Saved Favourites">⭐</button>
 
 <div id="sidebar">
+  <div id="resize-handle"></div>
   <div class="sidebar-header">⭐ Saved Favourites</div>
   <div id="favs-list"><p class="empty-favs">Your saved movies &amp; books<br>will appear here.</p></div>
 </div>
@@ -930,6 +929,8 @@ const resizeHandle = document.getElementById('resize-handle');
 let isResizing = false;
 
 resizeHandle.addEventListener('mousedown', e => {
+  if (window.innerWidth <= 700) return;
+  e.preventDefault();
   isResizing = true;
   resizeHandle.classList.add('dragging');
   document.body.style.userSelect = 'none';
@@ -938,7 +939,7 @@ resizeHandle.addEventListener('mousedown', e => {
 
 document.addEventListener('mousemove', e => {
   if (!isResizing) return;
-  const newW = Math.min(Math.max(window.innerWidth - e.clientX, 220), 600);
+  const newW = Math.min(Math.max(window.innerWidth - e.clientX, 200), 620);
   document.documentElement.style.setProperty('--sidebar-w', newW + 'px');
 });
 
