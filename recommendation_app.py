@@ -478,7 +478,7 @@ def chat():
     unlock_token = request.headers.get("X-Unlock-Token", "")
     if unlock_token != make_unlock_token(session_id):
         try:
-            if count_user_messages(session_id) >= 1:
+            if count_user_messages(session_id) >= 4:
                 return jsonify({"error": "locked"}), 403
         except Exception:
             pass  # if DB is down, allow the message

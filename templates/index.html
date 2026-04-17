@@ -488,7 +488,7 @@ header{
   <div class="lock-box">
     <div class="lock-icon" id="lock-icon">🔒</div>
     <div class="lock-title">Unlock Unlimited Access</div>
-    <div class="lock-sub" id="lock-sub">You've used your free message.<br>Enter the password to continue.</div>
+    <div class="lock-sub" id="lock-sub">You've used your 4 free messages.<br>Enter the password to continue.</div>
     <input type="password" id="lock-input" placeholder="Enter password…" autocomplete="off">
     <button id="lock-submit">Unlock →</button>
     <div id="lock-error"></div>
@@ -672,7 +672,7 @@ async function sendMessage() {
     typingEl.remove();
 
     if (res.status === 403 && data.error === 'locked') {
-      openLockModal("You've used your free message.<br>Enter the password to keep chatting.");
+      openLockModal("You've used your 4 free messages.<br>Enter the password to keep chatting.");
       return;
     }
 
