@@ -29,6 +29,8 @@ import requests
 import mysql.connector
 import os
 import json
+import hmac
+import hashlib
 from datetime import datetime
 
 app = Flask(__name__)
@@ -66,6 +68,19 @@ def get_db():
     except Exception as e:
         raise ConnectionError(f"Database unavailable: {e}")
 
+
+def make_unlock_token(session_id: str) -> str:
+    pwd = os.environ.get("UNLOCK_PASSWORD", "")
+    return hmac.new(pwd.encode(), session_id.encode(), hashlib.sha256).hexdigest()
+
+def count_user_messages(session_id: str) -> int:
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("SELECT COUNT(*) FROM sessions WHERE session=%s AND role='user'", (session_id,))
+    (n,) = cur.fetchone()
+    cur.close()
+    con.close()
+    return n
 
 def init_db():
     """
@@ -402,6 +417,17 @@ def api_test_openlibrary():
         return jsonify({"ok": False, "status_code": None, "error": str(e)})
 
 
+@app.route("/unlock", methods=["POST"])
+def unlock():
+    data       = request.get_json() or {}
+    password   = data.get("password", "")
+    session_id = data.get("session_id", "default")
+    expected   = os.environ.get("UNLOCK_PASSWORD", "")
+    if expected and password == expected:
+        return jsonify({"ok": True, "token": make_unlock_token(session_id)})
+    return jsonify({"ok": False, "error": "Wrong password"}), 401
+
+
 @app.route("/history", methods=["GET"])
 def history():
     """Returns the conversation history for a session, ready to render."""
@@ -447,6 +473,15 @@ def chat():
 
     if not user_msg:
         return jsonify({"error": "Empty message"}), 400
+
+    # Enforce 1-message limit for locked sessions
+    unlock_token = request.headers.get("X-Unlock-Token", "")
+    if unlock_token != make_unlock_token(session_id):
+        try:
+            if count_user_messages(session_id) >= 1:
+                return jsonify({"error": "locked"}), 403
+        except Exception:
+            pass  # if DB is down, allow the message
 
     # 1. Save user message
     try:

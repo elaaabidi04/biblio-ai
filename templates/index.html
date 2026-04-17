@@ -83,6 +83,84 @@ header{
 }
 #new-chat:hover{border-color:var(--brown);color:var(--brown);background:rgba(107,79,53,.05)}
 #api-test-btn:hover{border-color:var(--green);color:var(--green);background:rgba(90,122,92,.05)}
+#lock-btn{
+  background:transparent;
+  border:1.5px solid var(--border2);
+  color:var(--text-mid);
+  padding:.35rem .9rem;
+  border-radius:30px;
+  cursor:pointer;
+  font-family:'Lato',sans-serif;
+  font-size:.8rem;
+  transition:all .25s;
+}
+#lock-btn.unlocked{border-color:var(--green);color:var(--green)}
+#lock-btn:hover{border-color:var(--brown);color:var(--brown);background:rgba(107,79,53,.05)}
+
+/* ── LOCK MODAL ── */
+#lock-modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(58,46,32,.55);
+  backdrop-filter:blur(6px);
+  z-index:200;align-items:center;justify-content:center;
+}
+#lock-modal.open{display:flex}
+.lock-box{
+  background:var(--warm-white);
+  border:1px solid var(--border2);
+  border-radius:22px;
+  padding:2.2rem 2rem;
+  max-width:380px;width:90%;
+  text-align:center;
+  animation:pop .28s cubic-bezier(.34,1.3,.64,1);
+  box-shadow:0 24px 60px rgba(58,46,32,.22);
+}
+.lock-icon{font-size:2.2rem;margin-bottom:.7rem}
+.lock-title{
+  font-family:'Playfair Display',serif;
+  font-size:1.2rem;font-weight:600;
+  color:var(--brown);margin-bottom:.4rem;
+}
+.lock-sub{font-size:.83rem;color:var(--text-mid);margin-bottom:1.3rem;line-height:1.6}
+#lock-input{
+  width:100%;
+  background:var(--warm-white);
+  border:1.5px solid var(--border2);
+  border-radius:10px;
+  color:var(--text-dark);
+  font-family:'Lato',sans-serif;
+  font-size:.95rem;
+  padding:.65rem 1rem;
+  outline:none;
+  margin-bottom:.85rem;
+  transition:border-color .25s;
+  text-align:center;
+  letter-spacing:.08em;
+}
+#lock-input:focus{border-color:var(--brown-light)}
+#lock-submit{
+  width:100%;
+  background:var(--brown);
+  border:none;border-radius:30px;
+  color:var(--cream);
+  font-family:'Lato',sans-serif;
+  font-size:.82rem;font-weight:400;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:.7rem 1.4rem;
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 3px 12px rgba(107,79,53,.25);
+  margin-bottom:.6rem;
+}
+#lock-submit:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(107,79,53,.3)}
+#lock-error{font-size:.8rem;color:#c0392b;min-height:1.1rem;margin-top:.1rem}
+.lock-cancel{
+  background:none;border:none;
+  color:var(--brown-light);font-size:.78rem;
+  cursor:pointer;margin-top:.3rem;
+  font-family:'Lato',sans-serif;
+}
+.lock-cancel:hover{color:var(--brown)}
 
 /* ── CHAT PANEL ── */
 #chat-panel{
@@ -373,6 +451,7 @@ header{
 <header>
   <div class="logo">Biblio <span>AI</span></div>
   <div class="header-btns">
+    <button id="lock-btn" title="Unlock unlimited messages">🔒 Locked</button>
     <a href="/api-test" id="api-test-btn">API Status</a>
     <button id="new-chat">↺ New Chat</button>
   </div>
@@ -390,6 +469,18 @@ header{
 <div id="sidebar">
   <div class="sidebar-header">⭐ Saved Favourites</div>
   <div id="favs-list"><p class="empty-favs">Your saved movies &amp; books<br>will appear here.</p></div>
+</div>
+
+<div id="lock-modal">
+  <div class="lock-box">
+    <div class="lock-icon" id="lock-icon">🔒</div>
+    <div class="lock-title">Unlock Unlimited Access</div>
+    <div class="lock-sub" id="lock-sub">You've used your free message.<br>Enter the password to continue.</div>
+    <input type="password" id="lock-input" placeholder="Enter password…" autocomplete="off">
+    <button id="lock-submit">Unlock →</button>
+    <div id="lock-error"></div>
+    <button class="lock-cancel" id="lock-cancel">Cancel</button>
+  </div>
 </div>
 
 <div id="modal">
@@ -420,9 +511,79 @@ const messagesEl = document.getElementById('messages');
 const msgInput   = document.getElementById('msg');
 const sendBtn    = document.getElementById('send');
 const modal      = document.getElementById('modal');
+const lockModal  = document.getElementById('lock-modal');
+const lockBtn    = document.getElementById('lock-btn');
+
+// ── UNLOCK STATE ──────────────────────────────────────────────────────────
+let unlockToken = localStorage.getItem('biblio_unlock_' + SESSION_ID) || '';
+
+function setUnlocked(token) {
+  unlockToken = token;
+  localStorage.setItem('biblio_unlock_' + SESSION_ID, token);
+  lockBtn.textContent = '🔓 Unlocked';
+  lockBtn.classList.add('unlocked');
+  lockBtn.title = 'Unlimited access active';
+}
+
+function updateLockBtn() {
+  if (unlockToken) {
+    lockBtn.textContent = '🔓 Unlocked';
+    lockBtn.classList.add('unlocked');
+    lockBtn.title = 'Unlimited access active';
+  }
+}
+
+// ── LOCK MODAL LOGIC ──────────────────────────────────────────────────────
+function openLockModal(sub) {
+  document.getElementById('lock-sub').innerHTML = sub ||
+    'Enter the password to unlock unlimited messages.';
+  document.getElementById('lock-error').textContent = '';
+  document.getElementById('lock-input').value = '';
+  lockModal.classList.add('open');
+  setTimeout(() => document.getElementById('lock-input').focus(), 80);
+}
+
+lockBtn.addEventListener('click', () => {
+  if (!unlockToken) openLockModal('Enter the password to unlock unlimited messages.');
+});
+
+document.getElementById('lock-cancel').addEventListener('click', () => lockModal.classList.remove('open'));
+lockModal.addEventListener('click', e => { if (e.target === lockModal) lockModal.classList.remove('open'); });
+
+document.getElementById('lock-submit').addEventListener('click', submitUnlock);
+document.getElementById('lock-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitUnlock();
+});
+
+async function submitUnlock() {
+  const pwd = document.getElementById('lock-input').value.trim();
+  if (!pwd) return;
+  const errEl = document.getElementById('lock-error');
+  errEl.textContent = '';
+  try {
+    const res  = await fetch('/unlock', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({password: pwd, session_id: SESSION_ID})
+    });
+    const data = await res.json();
+    if (data.ok) {
+      setUnlocked(data.token);
+      lockModal.classList.remove('open');
+      document.getElementById('lock-icon').textContent = '🔓';
+    } else {
+      errEl.textContent = 'Wrong password. Try again.';
+      document.getElementById('lock-input').value = '';
+      document.getElementById('lock-input').focus();
+    }
+  } catch {
+    errEl.textContent = 'Connection error. Try again.';
+  }
+}
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
+  updateLockBtn();
   await restoreSession();
   loadFavourites();
 });
@@ -465,11 +626,19 @@ async function sendMessage() {
   try {
     const res  = await fetch('/chat', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {
+        'Content-Type':'application/json',
+        'X-Unlock-Token': unlockToken
+      },
       body: JSON.stringify({message: text, session_id: SESSION_ID})
     });
     const data = await res.json();
     typingEl.remove();
+
+    if (res.status === 403 && data.error === 'locked') {
+      openLockModal("You've used your free message.<br>Enter the password to keep chatting.");
+      return;
+    }
 
     if (!res.ok) throw new Error(data.error || 'Error');
 
