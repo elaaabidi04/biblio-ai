@@ -467,21 +467,19 @@ header{
 .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
 .reveal.visible{opacity:1;transform:none}
 
-/* ── MOBILE FAV TOGGLE ── */
+/* ── FAV TOGGLE (nav button, mobile only) ── */
 #fav-toggle{
   display:none;
-  position:fixed;bottom:5.5rem;right:1.2rem;
-  z-index:50;
-  background:var(--brown);
-  color:var(--cream);
-  border:none;border-radius:50%;
-  width:46px;height:46px;
-  font-size:1.1rem;
-  box-shadow:0 4px 16px rgba(107,79,53,.35);
+  background:transparent;
+  border:1.5px solid var(--border2);
+  color:var(--text-mid);
+  padding:.35rem .7rem;
+  border-radius:30px;
   cursor:pointer;
-  transition:transform .2s,box-shadow .2s;
+  font-size:.85rem;
+  transition:all .25s;
 }
-#fav-toggle:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(107,79,53,.4)}
+#fav-toggle:hover{border-color:var(--amber);color:var(--amber);background:rgba(201,135,74,.07)}
 
 /* ── MOBILE ── */
 @media(max-width:700px){
@@ -489,23 +487,33 @@ header{
     grid-template-columns:1fr;
     grid-template-rows:auto 1fr;
   }
-  header{padding:.75rem 1rem}
-  .logo{font-size:1.2rem}
-  #new-chat,#api-test-btn{font-size:.65rem;padding:.28rem .7rem}
-  #lock-btn{font-size:.7rem;padding:.28rem .65rem}
+  header{padding:.65rem .9rem}
+  .logo{font-size:1.1rem}
+  #new-chat,#api-test-btn{font-size:.62rem;padding:.25rem .6rem;letter-spacing:.06em}
+  #lock-btn{font-size:.65rem;padding:.25rem .6rem}
+  #fav-toggle{display:inline-block}
   #resize-handle{display:none}
-  #chat-panel{grid-column:1;grid-row:2;height:calc(100vh - 56px)}
-  #messages{padding:1.2rem 1rem}
-  #input-area{padding:.7rem 1rem .9rem;gap:.5rem}
-  #msg{font-size:.88rem;padding:.6rem .85rem}
+
+  #chat-panel{
+    grid-column:1;grid-row:2;
+    height:calc(100vh - 52px);
+    width:100%;
+  }
+  #messages{padding:1rem .85rem;gap:1rem}
+  #input-area{padding:.6rem .85rem .8rem;gap:.45rem}
+  #msg{font-size:.86rem;padding:.55rem .8rem}
   .hint{display:none}
-  #send{padding:.65rem 1.1rem;font-size:.75rem}
+  #send{padding:.6rem 1rem;font-size:.73rem}
+
+  .bubble{max-width:88%}
+  .rec-mini img{width:42px;height:60px}
 
   #sidebar{
     grid-column:1;grid-row:2;
     position:fixed;
     bottom:0;left:0;right:0;
-    height:70vh;
+    width:100%;
+    height:72vh;
     border-left:none;
     border-top:1.5px solid var(--border2);
     border-radius:22px 22px 0 0;
@@ -515,12 +523,10 @@ header{
     box-shadow:0 -8px 40px rgba(58,46,32,.18);
   }
   #sidebar.open{transform:translateY(0)}
-  #fav-toggle{display:flex;align-items:center;justify-content:center}
 
-  .bubble{max-width:92%}
-  .modal-box{padding:1.4rem;border-radius:18px}
-  .modal-box img{max-height:180px}
-  .lock-box{padding:1.6rem 1.2rem}
+  .modal-box{padding:1.3rem;border-radius:18px;width:95%}
+  .modal-box img{max-height:170px}
+  .lock-box{padding:1.5rem 1.1rem}
 }
 </style>
 </head>
@@ -534,6 +540,7 @@ header{
   <div class="header-btns">
     <button id="lock-btn" title="Unlock unlimited messages">🔒 Locked</button>
     <a href="/api-test" id="api-test-btn">API Status</a>
+    <button id="fav-toggle" title="Saved Favourites">⭐</button>
     <button id="new-chat">↺ New Chat</button>
   </div>
 </header>
@@ -546,8 +553,6 @@ header{
     <button id="send">Send</button>
   </div>
 </div>
-
-<button id="fav-toggle" title="Saved Favourites">⭐</button>
 
 <div id="sidebar">
   <div id="resize-handle"></div>
@@ -958,6 +963,7 @@ const favToggle  = document.getElementById('fav-toggle');
 favToggle.addEventListener('click', () => {
   const open = sidebar.classList.toggle('open');
   favToggle.textContent = open ? '✕' : '⭐';
+  favToggle.title = open ? 'Close' : 'Saved Favourites';
   if (open) loadFavourites();
 });
 
