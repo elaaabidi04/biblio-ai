@@ -346,7 +346,18 @@ header{
   display:flex;gap:.65rem;
   transition:box-shadow .2s,border-color .2s;
 }
+.fav-card{position:relative}
 .fav-card:hover{border-color:var(--border2);box-shadow:0 3px 12px var(--shadow)}
+.fav-delete{
+  position:absolute;top:.45rem;right:.5rem;
+  background:none;border:none;cursor:pointer;
+  color:var(--brown-light);font-size:.8rem;
+  opacity:0;transition:opacity .2s,color .2s;
+  padding:.1rem .3rem;border-radius:4px;
+  line-height:1;
+}
+.fav-card:hover .fav-delete{opacity:1}
+.fav-delete:hover{color:#c0392b}
 .fav-card img{
   width:38px;height:55px;
   object-fit:cover;border-radius:6px;
@@ -745,7 +756,8 @@ async function loadFavourites() {
     return;
   }
   list.innerHTML = data.favourites.map(f => `
-    <div class="fav-card">
+    <div class="fav-card" data-id="${f.id}">
+      <button class="fav-delete" title="Remove">✕</button>
       <img src="${f.poster_url||'https://via.placeholder.com/40x58/0f0f1a/444?text=?'}" onerror="this.src='https://via.placeholder.com/40x58/0f0f1a/444?text=?'" alt="">
       <div>
         <div class="fav-title">${escHtml(f.title)}</div>
@@ -754,6 +766,13 @@ async function loadFavourites() {
       </div>
     </div>
   `).join('');
+  list.querySelectorAll('.fav-delete').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.closest('.fav-card').dataset.id;
+      await fetch(`/favourite/${id}?session_id=${SESSION_ID}`, {method:'DELETE'});
+      loadFavourites();
+    });
+  });
 }
 
 // ── NEW CHAT ──────────────────────────────────────────────────────────────

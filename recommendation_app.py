@@ -553,6 +553,21 @@ def favourites():
     return jsonify({"favourites": get_favourites(session_id)})
 
 
+@app.route("/favourite/<int:fav_id>", methods=["DELETE"])
+def delete_favourite(fav_id):
+    session_id = request.args.get("session_id", "default")
+    try:
+        con = get_db()
+        cur = con.cursor()
+        cur.execute("DELETE FROM favourites WHERE id=%s AND session=%s", (fav_id, session_id))
+        con.commit()
+        cur.close()
+        con.close()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route("/clear", methods=["POST"])
 def clear():
     """Clears a session's conversation history."""
