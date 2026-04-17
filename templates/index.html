@@ -83,6 +83,7 @@ header{
 }
 #new-chat:hover{border-color:var(--brown);color:var(--brown);background:rgba(107,79,53,.05)}
 #api-test-btn:hover{border-color:var(--green);color:var(--green);background:rgba(90,122,92,.05)}
+#api-test-btn.hidden{display:none}
 #lock-btn{
   background:transparent;
   border:1.5px solid var(--border2);
@@ -528,19 +529,34 @@ const lockBtn    = document.getElementById('lock-btn');
 // ── UNLOCK STATE ──────────────────────────────────────────────────────────
 let unlockToken = localStorage.getItem('biblio_unlock_' + SESSION_ID) || '';
 
+const apiTestBtn = document.getElementById('api-test-btn');
+
 function setUnlocked(token) {
   unlockToken = token;
   localStorage.setItem('biblio_unlock_' + SESSION_ID, token);
   lockBtn.textContent = '🔓 Unlocked';
   lockBtn.classList.add('unlocked');
-  lockBtn.title = 'Unlimited access active';
+  lockBtn.title = 'Click to lock again';
+  apiTestBtn.classList.remove('hidden');
+}
+
+function setLocked() {
+  unlockToken = '';
+  localStorage.removeItem('biblio_unlock_' + SESSION_ID);
+  lockBtn.textContent = '🔒 Locked';
+  lockBtn.classList.remove('unlocked');
+  lockBtn.title = 'Unlock unlimited messages';
+  apiTestBtn.classList.add('hidden');
 }
 
 function updateLockBtn() {
   if (unlockToken) {
     lockBtn.textContent = '🔓 Unlocked';
     lockBtn.classList.add('unlocked');
-    lockBtn.title = 'Unlimited access active';
+    lockBtn.title = 'Click to lock again';
+    apiTestBtn.classList.remove('hidden');
+  } else {
+    apiTestBtn.classList.add('hidden');
   }
 }
 
@@ -555,7 +571,11 @@ function openLockModal(sub) {
 }
 
 lockBtn.addEventListener('click', () => {
-  if (!unlockToken) openLockModal('Enter the password to unlock unlimited messages.');
+  if (unlockToken) {
+    setLocked();
+  } else {
+    openLockModal('Enter the password to unlock unlimited messages.');
+  }
 });
 
 document.getElementById('lock-cancel').addEventListener('click', () => lockModal.classList.remove('open'));
