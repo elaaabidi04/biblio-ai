@@ -361,7 +361,11 @@ header{
   transition:box-shadow .2s,border-color .2s;
 }
 .fav-card{position:relative}
+.fav-card.movie{border-left:3px solid var(--amber)}
+.fav-card.book{border-left:3px solid var(--green)}
 .fav-card:hover{border-color:var(--border2);box-shadow:0 3px 12px var(--shadow)}
+.fav-card.movie:hover{border-left-color:var(--amber)}
+.fav-card.book:hover{border-left-color:var(--green)}
 .fav-delete{
   position:absolute;top:.45rem;right:.5rem;
   background:none;border:none;cursor:pointer;
@@ -857,12 +861,13 @@ async function loadFavourites() {
     return;
   }
   list.innerHTML = data.favourites.map(f => `
-    <div class="fav-card" data-id="${f.id}">
+    <div class="fav-card ${escHtml(f.category||'')}" data-id="${f.id}">
       <button class="fav-delete" title="Remove">✕</button>
       <img src="${f.poster_url||'https://via.placeholder.com/40x58/0f0f1a/444?text=?'}" onerror="this.src='https://via.placeholder.com/40x58/0f0f1a/444?text=?'" alt="">
       <div>
         <div class="fav-title">${escHtml(f.title)}</div>
         <div class="fav-creator">${escHtml(f.creator||'')}</div>
+        <span class="cat-badge ${escHtml(f.category||'')}">${escHtml(f.category||'')}</span>
         <a class="fav-link" href="${f.detail_url||'#'}" target="_blank">View →</a>
       </div>
     </div>

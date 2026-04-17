@@ -287,7 +287,7 @@ WHEN STILL GATHERING INFO (no recommendations yet), respond with ONLY:
 
 IMPORTANT:
 - Always return valid JSON, nothing else.
-- Mix movies AND books in recommendations unless user specifies one.
+- If the user asks specifically for movies, set ALL categories to "movie". If they ask specifically for books, set ALL categories to "book". Only mix if the user wants both.
 - Provide exactly 3 recommendations when ready.
 - Keep messages warm and conversational.
 """
